@@ -14,6 +14,52 @@
 #include <string>
 #include <vector>
 
+namespace guard::detail
+{
+    enum class Color
+    {
+        Default,
+        Green,
+        Red,
+        Yellow
+    };
+
+    inline const char *color_code(Color c)
+    {
+#ifdef GUARD_TEST_ENABLE_COLORS
+        switch (c)
+        {
+        case Color::Green:
+            return "\033[32m";
+        case Color::Red:
+            return "\033[31m";
+        case Color::Yellow:
+            return "\033[33m";
+        case Color::Default:
+        default:
+            return "\033[0m";
+        }
+#else
+        (void)c;
+        return "";
+#endif
+    }
+
+    struct ColorScope
+    {
+        std::ostream &os;
+
+        explicit ColorScope(std::ostream &os_, Color c) : os(os_)
+        {
+            os << color_code(c);
+        }
+
+        ~ColorScope()
+        {
+            os << color_code(Color::Default);
+        }
+    };
+} // namespace guard::detail
 namespace guard::test
 {
     using TestFunc = void (*)();
@@ -61,6 +107,9 @@ namespace guard::test
     {
         RunnerStats stats;
         std::map<std::string, ModuleStats> modules;
+
+        using guard::detail::Color;
+        using guard::detail::ColorScope;
 
         struct TestSummary
         {
@@ -175,7 +224,17 @@ namespace guard::test
         for (const auto &entry : modules)
         {
             const auto &mod = entry.second;
-            os << mod.file << ":\n";
+
+            Color mod_color =
+                (mod.tests_failed > 0 || mod.asserts_failed > 0)
+                    ? Color::Red
+                    : Color::Green;
+
+            {
+                ColorScope scope(os, mod_color);
+                os << mod.file << ":\n";
+            }
+
             os << "  Tests   : " << mod.tests_total
                << " (passed " << mod.tests_passed
                << ", failed " << mod.tests_failed << ")\n";
@@ -187,15 +246,35 @@ namespace guard::test
 
         guard_check_env_t &env = guard_check_env();
         os << "=======================\n";
-        os << "Overall summary:\n";
-        os << "Tests run : " << stats.total << "\n";
-        os << "Passed    : " << stats.passed << "\n";
-        os << "Failed    : " << stats.failed << "\n";
+        {
+            ColorScope summary_scope(os, stats.failed == 0 ? Color::Green : Color::Red);
+
+            os << "Overall summary:\n";
+
+            os << "Tests run : " << stats.total << "\n";
+
+            os << "Passed    : ";
+            {
+                ColorScope passed_scope(os, stats.passed > 0 ? Color::Green : Color::Default);
+                os << stats.passed;
+            }
+            os << "\n";
+
+            os << "Failed    : ";
+            {
+                ColorScope failed_scope(os, stats.failed > 0 ? Color::Red : Color::Default);
+                os << stats.failed;
+            }
+            os << "\n";
+        }
         os << "Asserts   : " << env.assert_total
            << " (failed " << env.assert_failed << ")\n";
 
         os << "=======================\n";
-        os << "Failures detail:\n";
+        {
+            ColorScope scope(os, failures.empty() ? Color::Green : Color::Red);
+            os << "Failures detail:\n";
+        }
         if (failures.empty())
         {
             os << "No test failures.\n";
@@ -204,8 +283,11 @@ namespace guard::test
         {
             for (const auto &f : failures)
             {
-                os << f.tc->file << ":" << f.tc->line
-                   << " in test \"" << f.tc->name << "\"\n";
+                {
+                    ColorScope scope(os, Color::Red);
+                    os << f.tc->file << ":" << f.tc->line
+                       << " in test \"" << f.tc->name << "\"\n";
+                }
                 if (!f.error.empty())
                     os << f.error << "\n";
                 os << "-----------------------\n";
