@@ -4,6 +4,8 @@
 #include "check.h"
 #include "env.h"
 #include "util.h"
+#include <algorithm>
+#include <map>
 
 #include <chrono>
 #include <cstring>
@@ -44,23 +46,67 @@ namespace guard::test
         int passed = 0;
         int failed = 0;
     };
+    struct ModuleStats
+    {
+        std::string file;
+        int tests_total = 0;
+        int tests_passed = 0;
+        int tests_failed = 0;
+        unsigned long long asserts_total = 0;
+        unsigned long long asserts_failed = 0;
+    };
 
     // test_filter == nullptr -> запускать все тесты
     inline int run_all(const char *test_filter, std::ostream &os = std::cout)
     {
         RunnerStats stats;
+        std::map<std::string, ModuleStats> modules;
 
-        for (const auto &tc : registry())
+        struct TestSummary
+        {
+            const TestCase *tc;
+            std::string error;
+        };
+
+        std::vector<TestSummary> failures;
+
+        // Копируем и сортируем тесты по файлу, строке и имени
+        auto tests = registry();
+        std::sort(tests.begin(), tests.end(), [](const TestCase &lhs, const TestCase &rhs) {
+            const std::string lhs_file(lhs.file ? lhs.file : "");
+            const std::string rhs_file(rhs.file ? rhs.file : "");
+            if (lhs_file < rhs_file)
+                return true;
+            if (rhs_file < lhs_file)
+                return false;
+            if (lhs.line != rhs.line)
+                return lhs.line < rhs.line;
+            const std::string lhs_name(lhs.name ? lhs.name : "");
+            const std::string rhs_name(rhs.name ? rhs.name : "");
+            return lhs_name < rhs_name;
+        });
+
+        for (const auto &tc : tests)
         {
             if (test_filter &&
                 std::string(tc.name).find(test_filter) == std::string::npos)
                 continue;
 
             ++stats.total;
-            os << "[ RUN      ] " << tc.name << "  (" << tc.file << ":"
-               << tc.line << ")\n";
+
+            auto &mod = modules[tc.file];
+            if (mod.file.empty())
+                mod.file = tc.file;
+            ++mod.tests_total;
 
             guard_check_error_msg.clear();
+
+            guard_check_env_t &env = guard_check_env();
+            const auto asserts_before_total = env.assert_total;
+            const auto asserts_before_failed = env.assert_failed;
+
+            bool test_passed = true;
+            std::string test_error;
 
             GUARD_CHECK_ENV_START()
             {
@@ -71,20 +117,20 @@ namespace guard::test
                     if (guard_check_error_msg.empty())
                     {
                         ++stats.passed;
-                        os << "[       OK ] " << tc.name << "\n";
+                        ++mod.tests_passed;
+                        test_passed = true;
                     }
                     else
                     {
                         ++stats.failed;
-                        os << "[  FAILED  ] " << tc.name << "\n";
-                        os << guard_check_error_msg << "\n";
+                        ++mod.tests_failed;
+                        test_passed = false;
+                        test_error = guard_check_error_msg;
                     }
                 }
                 catch (const guard_check_exception &)
                 {
-                    // Это «нормальный» путь завершения теста через
-                    // REQUIRE/FAIL. Сообщения уже лежат в
-                    // guard_check_error_msg.
+                    // REQUIRE/FAIL бросают guard_check_exception — пробрасываем наружу
                     throw;
                 }
                 catch (const std::exception &ex)
@@ -107,16 +153,64 @@ namespace guard::test
             GUARD_CHECK_ENV_ERROR_HANDLER()
             {
                 ++stats.failed;
-                os << "[  FAILED  ] " << tc.name << "\n";
+                ++mod.tests_failed;
+                test_passed = false;
                 if (!guard_check_error_msg.empty())
-                    os << guard_check_error_msg << "\n";
+                    test_error = guard_check_error_msg;
+            }
+
+            const auto asserts_after_total = env.assert_total;
+            const auto asserts_after_failed = env.assert_failed;
+            mod.asserts_total += (asserts_after_total - asserts_before_total);
+            mod.asserts_failed += (asserts_after_failed - asserts_before_failed);
+
+            if (!test_passed)
+            {
+                failures.push_back(TestSummary{&tc, std::move(test_error)});
             }
         }
 
         os << "=======================\n";
+        os << "Per-module summary:\n";
+        for (const auto &entry : modules)
+        {
+            const auto &mod = entry.second;
+            os << mod.file << ":\n";
+            os << "  Tests   : " << mod.tests_total
+               << " (passed " << mod.tests_passed
+               << ", failed " << mod.tests_failed << ")\n";
+            os << "  Asserts : " << mod.asserts_total;
+            if (mod.asserts_failed > 0)
+                os << " (failed " << mod.asserts_failed << ")";
+            os << "\n";
+        }
+
+        guard_check_env_t &env = guard_check_env();
+        os << "=======================\n";
+        os << "Overall summary:\n";
         os << "Tests run : " << stats.total << "\n";
         os << "Passed    : " << stats.passed << "\n";
         os << "Failed    : " << stats.failed << "\n";
+        os << "Asserts   : " << env.assert_total
+           << " (failed " << env.assert_failed << ")\n";
+
+        os << "=======================\n";
+        os << "Failures detail:\n";
+        if (failures.empty())
+        {
+            os << "No test failures.\n";
+        }
+        else
+        {
+            for (const auto &f : failures)
+            {
+                os << f.tc->file << ":" << f.tc->line
+                   << " in test \"" << f.tc->name << "\"\n";
+                if (!f.error.empty())
+                    os << f.error << "\n";
+                os << "-----------------------\n";
+            }
+        }
 
         return stats.failed ? 1 : 0;
     }
@@ -169,6 +263,7 @@ namespace guard::test
 #define GUARD_TEST_FAIL_MSG(msg_)                                              \
     do                                                                         \
     {                                                                          \
+        GUARD_CHECK_ENV_COUNT_ASSERT(false);                                   \
         std::string _guard_msg = std::string("Test assertion failed at ") +    \
                                  __FILE__ + ":" + std::to_string(__LINE__) +   \
                                  ": " + (msg_);                                \
@@ -196,6 +291,10 @@ namespace guard::test
             GUARD_TEST_FAIL_MSG(std::string("Expected exception from: ") +     \
                                 #code);                                        \
         }                                                                      \
+        else                                                                   \
+        {                                                                      \
+            GUARD_CHECK_ENV_COUNT_ASSERT(true);                                \
+        }                                                                      \
     } while (0)
 
 // ожидаем, что code кинет исключение типа ExType (фатальный)
@@ -219,6 +318,10 @@ namespace guard::test
             GUARD_TEST_FAIL_MSG(std::string("Expected exception of type ") +   \
                                 #ExType + " from: " #code);                    \
         }                                                                      \
+        else                                                                   \
+        {                                                                      \
+            GUARD_CHECK_ENV_COUNT_ASSERT(true);                                \
+        }                                                                      \
     } while (0)
 
 // ожидаем, что code НИЧЕГО не кидает (фатальный)
@@ -240,6 +343,7 @@ namespace guard::test
             GUARD_TEST_FAIL_MSG(                                               \
                 std::string("Unexpected non-std exception from: ") + #code);   \
         }                                                                      \
+        GUARD_CHECK_ENV_COUNT_ASSERT(true);                                    \
     } while (0)
 
 // ---------- "таймаут" по времени выполнения ----------
@@ -259,6 +363,10 @@ namespace guard::test
                 std::string("Timeout: expression ") + #code + " took " +       \
                 std::to_string(_guard_ms) + " ms, limit is " +                 \
                 std::to_string(static_cast<long long>(ms)) + " ms");           \
+        }                                                                      \
+        else                                                                   \
+        {                                                                      \
+            GUARD_CHECK_ENV_COUNT_ASSERT(true);                                \
         }                                                                      \
     } while (0)
 

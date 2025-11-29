@@ -23,7 +23,9 @@ static inline std::string guard_location_part(struct guard_location loc)
 #define GUARD_CHECK(expr)                                                      \
     do                                                                         \
     {                                                                          \
-        if (!(expr))                                                           \
+        const bool _guard_ok = static_cast<bool>(expr);                        \
+        GUARD_CHECK_ENV_COUNT_ASSERT(_guard_ok);                               \
+        if (!_guard_ok)                                                        \
         {                                                                      \
             GUARD_CURRENT_LOCATION(loc);                                       \
             std::ostringstream _guard_os;                                      \
@@ -37,7 +39,9 @@ static inline std::string guard_location_part(struct guard_location loc)
 #define GUARD_REQUIRE(expr)                                                    \
     do                                                                         \
     {                                                                          \
-        if (!(expr))                                                           \
+        const bool _guard_ok = static_cast<bool>(expr);                        \
+        GUARD_CHECK_ENV_COUNT_ASSERT(_guard_ok);                               \
+        if (!_guard_ok)                                                        \
         {                                                                      \
             GUARD_CURRENT_LOCATION(loc);                                       \
             std::ostringstream _guard_os;                                      \
@@ -52,7 +56,9 @@ static inline std::string guard_location_part(struct guard_location loc)
 #define GUARD_CHECK_FALSE(expr)                                                \
     do                                                                         \
     {                                                                          \
-        if (expr)                                                              \
+        const bool _guard_ok = !(expr);                                        \
+        GUARD_CHECK_ENV_COUNT_ASSERT(_guard_ok);                               \
+        if (!_guard_ok)                                                        \
         {                                                                      \
             GUARD_CURRENT_LOCATION(loc);                                       \
             std::ostringstream _guard_os;                                      \
@@ -66,7 +72,9 @@ static inline std::string guard_location_part(struct guard_location loc)
 #define GUARD_REQUIRE_FALSE(expr)                                              \
     do                                                                         \
     {                                                                          \
-        if (expr)                                                              \
+        const bool _guard_ok = !(expr);                                        \
+        GUARD_CHECK_ENV_COUNT_ASSERT(_guard_ok);                               \
+        if (!_guard_ok)                                                        \
         {                                                                      \
             GUARD_CURRENT_LOCATION(loc);                                       \
             std::ostringstream _guard_os;                                      \
@@ -83,7 +91,9 @@ static inline std::string guard_location_part(struct guard_location loc)
     {                                                                          \
         const auto &_guard_a = (a);                                            \
         const auto &_guard_b = (b);                                            \
-        if (!(_guard_a == _guard_b))                                           \
+        const bool _guard_ok = (_guard_a == _guard_b);                         \
+        GUARD_CHECK_ENV_COUNT_ASSERT(_guard_ok);                               \
+        if (!_guard_ok)                                                        \
         {                                                                      \
             GUARD_CURRENT_LOCATION(loc);                                       \
             std::ostringstream _guard_os;                                      \
@@ -101,7 +111,9 @@ static inline std::string guard_location_part(struct guard_location loc)
     {                                                                          \
         const auto &_guard_a = (a);                                            \
         const auto &_guard_b = (b);                                            \
-        if (!(_guard_a == _guard_b))                                           \
+        const bool _guard_ok = (_guard_a == _guard_b);                         \
+        GUARD_CHECK_ENV_COUNT_ASSERT(_guard_ok);                               \
+        if (!_guard_ok)                                                        \
         {                                                                      \
             GUARD_CURRENT_LOCATION(loc);                                       \
             std::ostringstream _guard_os;                                      \
@@ -120,7 +132,9 @@ static inline std::string guard_location_part(struct guard_location loc)
     {                                                                          \
         const auto &_guard_a = (a);                                            \
         const auto &_guard_b = (b);                                            \
-        if (!(_guard_a != _guard_b))                                           \
+        const bool _guard_ok = (_guard_a != _guard_b);                         \
+        GUARD_CHECK_ENV_COUNT_ASSERT(_guard_ok);                               \
+        if (!_guard_ok)                                                        \
         {                                                                      \
             GUARD_CURRENT_LOCATION(loc);                                       \
             std::ostringstream _guard_os;                                      \
@@ -138,7 +152,9 @@ static inline std::string guard_location_part(struct guard_location loc)
     {                                                                          \
         const auto &_guard_a = (a);                                            \
         const auto &_guard_b = (b);                                            \
-        if (!(_guard_a != _guard_b))                                           \
+        const bool _guard_ok = (_guard_a != _guard_b);                         \
+        GUARD_CHECK_ENV_COUNT_ASSERT(_guard_ok);                               \
+        if (!_guard_ok)                                                        \
         {                                                                      \
             GUARD_CURRENT_LOCATION(loc);                                       \
             std::ostringstream _guard_os;                                      \
@@ -157,7 +173,9 @@ static inline std::string guard_location_part(struct guard_location loc)
     {                                                                          \
         const auto &_guard_a = (a);                                            \
         const auto &_guard_b = (b);                                            \
-        if (!(_guard_a < _guard_b))                                            \
+        const bool _guard_ok = (_guard_a < _guard_b);                          \
+        GUARD_CHECK_ENV_COUNT_ASSERT(_guard_ok);                               \
+        if (!_guard_ok)                                                        \
         {                                                                      \
             GUARD_CURRENT_LOCATION(loc);                                       \
             std::ostringstream _guard_os;                                      \
@@ -175,7 +193,9 @@ static inline std::string guard_location_part(struct guard_location loc)
     {                                                                          \
         const auto &_guard_a = (a);                                            \
         const auto &_guard_b = (b);                                            \
-        if (!(_guard_a < _guard_b))                                            \
+        const bool _guard_ok = (_guard_a < _guard_b);                          \
+        GUARD_CHECK_ENV_COUNT_ASSERT(_guard_ok);                               \
+        if (!_guard_ok)                                                        \
         {                                                                      \
             GUARD_CURRENT_LOCATION(loc);                                       \
             std::ostringstream _guard_os;                                      \
@@ -194,7 +214,9 @@ static inline std::string guard_location_part(struct guard_location loc)
     {                                                                          \
         const auto &_guard_a = (a);                                            \
         const auto &_guard_b = (b);                                            \
-        if (!(_guard_a > _guard_b))                                            \
+        const bool _guard_ok = (_guard_a > _guard_b);                          \
+        GUARD_CHECK_ENV_COUNT_ASSERT(_guard_ok);                               \
+        if (!_guard_ok)                                                        \
         {                                                                      \
             GUARD_CURRENT_LOCATION(loc);                                       \
             std::ostringstream _guard_os;                                      \
@@ -212,7 +234,9 @@ static inline std::string guard_location_part(struct guard_location loc)
     {                                                                          \
         const auto &_guard_a = (a);                                            \
         const auto &_guard_b = (b);                                            \
-        if (!(_guard_a > _guard_b))                                            \
+        const bool _guard_ok = (_guard_a > _guard_b);                          \
+        GUARD_CHECK_ENV_COUNT_ASSERT(_guard_ok);                               \
+        if (!_guard_ok)                                                        \
         {                                                                      \
             GUARD_CURRENT_LOCATION(loc);                                       \
             std::ostringstream _guard_os;                                      \

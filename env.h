@@ -7,7 +7,9 @@
 // Вся среда проверки в одной структуре
 struct guard_check_env_t
 {
-    std::string error_msg;
+std::string error_msg;
+unsigned long long assert_total = 0;
+unsigned long long assert_failed = 0;
 };
 
 // Глобальный (на процесс) экземпляр среды, реализованный через
@@ -47,6 +49,13 @@ public:
 inline void GUARD_CHECK_ENV_RAISE_IMPL()
 {
     throw guard_check_exception{};
+}
+inline void GUARD_CHECK_ENV_COUNT_ASSERT(bool success)
+{
+guard_check_env_t &env = guard_check_env();
+++env.assert_total;
+if (!success)
+    ++env.assert_failed;
 }
 
 // Добавление сообщения об ошибке (для "мягких" CHECK)
