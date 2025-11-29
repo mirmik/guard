@@ -1,13 +1,12 @@
 // guard/check/env.h
 #pragma once
 
-#include <setjmp.h>
+#include <exception>
 #include <string>
 
 // Вся среда проверки в одной структуре
 struct guard_check_env_t
 {
-    jmp_buf start_point;
     std::string error_msg;
 };
 
@@ -20,15 +19,16 @@ inline guard_check_env_t &guard_check_env()
 }
 
 // Макросы-алиасы, чтобы старый код продолжал работать как раньше
-#define guard_check_start_point (guard_check_env().start_point)
 #define guard_check_error_msg (guard_check_env().error_msg)
 
-// Начало "окружения" проверки: очищаем строку и делаем setjmp
+// Начало "окружения" проверки: очищаем строку и запускаем try-блок
 #define GUARD_CHECK_ENV_START()                                                \
-    if (guard_check_error_msg.clear(), setjmp(guard_check_start_point) == 0)
+    if (guard_check_error_msg.clear(), true)                                   \
+        try
 
-// Ветка обработки ошибки (после longjmp)
-#define GUARD_CHECK_ENV_ERROR_HANDLER() else
+// Ветка обработки ошибки (после выброса guard_check_exception)
+#define GUARD_CHECK_ENV_ERROR_HANDLER()                                        \
+        catch (const guard_check_exception &)
 
 // Установка сообщения об ошибке (перезаписывает предыдущий текст)
 inline void GUARD_CHECK_ENV_RAISE_SET(const std::string &msg)
@@ -37,9 +37,17 @@ inline void GUARD_CHECK_ENV_RAISE_SET(const std::string &msg)
 }
 
 // Переход назад в точку GUARD_CHECK_ENV_START()
+class guard_check_exception : public std::exception
+{
+public:
+    const char *what() const noexcept override
+    {
+        return "guard test failure";
+    }
+};
 inline void GUARD_CHECK_ENV_RAISE_IMPL()
 {
-    longjmp(guard_check_start_point, 1);
+    throw guard_check_exception{};
 }
 
 // Добавление сообщения об ошибке (для "мягких" CHECK)
