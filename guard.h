@@ -1,6 +1,7 @@
 // guard.h (или guard/test.h)
 #pragma once
 
+#include "util.h"
 #include "check.h"
 #include "env.h"
 
@@ -154,6 +155,7 @@ namespace guard::test
 #define REQUIRE_NEQ(a, b) GUARD_REQUIRE_NEQ(a, b)
 #define REQUIRE_LT(a, b) GUARD_REQUIRE_LT(a, b)
 #define REQUIRE_GT(a, b) GUARD_REQUIRE_GT(a, b)
+#define FAIL(msg) GUARD_TEST_FAIL_MSG(msg)
 #endif
 
 // ---------- общий helper для "сделать фейл" ----------
