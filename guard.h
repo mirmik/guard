@@ -1,9 +1,9 @@
 // guard.h (или guard/test.h)
 #pragma once
 
-#include "util.h"
 #include "check.h"
 #include "env.h"
+#include "util.h"
 
 #include <chrono>
 #include <cstring>
@@ -79,6 +79,13 @@ namespace guard::test
                         os << "[  FAILED  ] " << tc.name << "\n";
                         os << guard_check_error_msg << "\n";
                     }
+                }
+                catch (const guard_check_exception &)
+                {
+                    // Это «нормальный» путь завершения теста через
+                    // REQUIRE/FAIL. Сообщения уже лежат в
+                    // guard_check_error_msg.
+                    throw;
                 }
                 catch (const std::exception &ex)
                 {
@@ -163,8 +170,8 @@ namespace guard::test
     do                                                                         \
     {                                                                          \
         std::string _guard_msg = std::string("Test assertion failed at ") +    \
-                                 __FILE__ + ":" +                              \
-                                 std::to_string(__LINE__) + ": " + (msg_);     \
+                                 __FILE__ + ":" + std::to_string(__LINE__) +   \
+                                 ": " + (msg_);                                \
         GUARD_CHECK_ENV_APPEND(_guard_msg);                                    \
         GUARD_CHECK_ENV_RAISE_IMPL();                                          \
     } while (0)

@@ -27,8 +27,7 @@ inline guard_check_env_t &guard_check_env()
         try
 
 // Ветка обработки ошибки (после выброса guard_check_exception)
-#define GUARD_CHECK_ENV_ERROR_HANDLER()                                        \
-        catch (const guard_check_exception &)
+#define GUARD_CHECK_ENV_ERROR_HANDLER() catch (const guard_check_exception &)
 
 // Установка сообщения об ошибке (перезаписывает предыдущий текст)
 inline void GUARD_CHECK_ENV_RAISE_SET(const std::string &msg)

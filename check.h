@@ -56,8 +56,8 @@ static inline std::string guard_location_part(struct guard_location loc)
         {                                                                      \
             GUARD_CURRENT_LOCATION(loc);                                       \
             std::ostringstream _guard_os;                                      \
-            _guard_os << guard_location_part(loc)                              \
-                      << "\tcond: !" << GUARD_STRINGIFY(expr) << "\n\f";       \
+            _guard_os << guard_location_part(loc) << "\tcond: !"               \
+                      << GUARD_STRINGIFY(expr) << "\n\f";                      \
             GUARD_CHECK_ENV_APPEND(_guard_os.str());                           \
         }                                                                      \
     } while (0)
@@ -70,8 +70,8 @@ static inline std::string guard_location_part(struct guard_location loc)
         {                                                                      \
             GUARD_CURRENT_LOCATION(loc);                                       \
             std::ostringstream _guard_os;                                      \
-            _guard_os << guard_location_part(loc)                              \
-                      << "\tcond: !" << GUARD_STRINGIFY(expr) << "\n\f";       \
+            _guard_os << guard_location_part(loc) << "\tcond: !"               \
+                      << GUARD_STRINGIFY(expr) << "\n\f";                      \
             GUARD_CHECK_ENV_APPEND(_guard_os.str());                           \
             GUARD_CHECK_ENV_RAISE_IMPL();                                      \
         }                                                                      \
