@@ -32,4 +32,12 @@ TEST_CASE("failed test: simple arithmetic")
     CHECK_EQ(2 + 2, 4);
     CHECK_LT(20, 10);
 }
+
+
+TEST_CASE("failed test: simple arithmetic")
+{
+    CHECK_EQ(2 + 2, 4);
+    CHECK_LT(20, 10);
+}
+
 GUARD_TEST_MAIN();

@@ -115,6 +115,7 @@ namespace guard::test
         {
             const TestCase *tc;
             std::string error;
+            std::string stdout_output;
         };
 
         std::vector<TestSummary> failures;
@@ -156,6 +157,24 @@ namespace guard::test
 
             bool test_passed = true;
             std::string test_error;
+
+            // Перехватываем std::cout на время выполнения теста
+            std::ostringstream captured_stdout;
+            struct CoutRedirect
+            {
+                std::ostream &os;
+                std::streambuf *old_buf;
+
+                CoutRedirect(std::ostream &os_, std::streambuf *new_buf)
+                    : os(os_), old_buf(os_.rdbuf(new_buf))
+                {
+                }
+
+                ~CoutRedirect()
+                {
+                    os.rdbuf(old_buf);
+                }
+            } _guard_cout_redirect(std::cout, captured_stdout.rdbuf());
 
             GUARD_CHECK_ENV_START()
             {
@@ -215,7 +234,10 @@ namespace guard::test
 
             if (!test_passed)
             {
-                failures.push_back(TestSummary{&tc, std::move(test_error)});
+                failures.push_back(TestSummary{
+                    &tc,
+                    std::move(test_error),
+                    captured_stdout.str()});
             }
         }
 
@@ -290,6 +312,11 @@ namespace guard::test
                 }
                 if (!f.error.empty())
                     os << f.error << "\n";
+                if (!f.stdout_output.empty())
+                {
+                    os << "Captured stdout:\n";
+                    os << f.stdout_output << "\n";
+                }
                 os << "-----------------------\n";
             }
         }
