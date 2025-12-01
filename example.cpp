@@ -1,6 +1,6 @@
 #define GUARD_TEST_ENABLE_COLORS
 #include "check.h"
-#include "guard.h"
+#include "guard_main.h"
 #include <stdexcept>
 
 TEST_CASE("simple arithmetic")
@@ -32,7 +32,6 @@ TEST_CASE("failed test: simple arithmetic")
     CHECK_EQ(2 + 2, 4);
     CHECK_LT(20, 10);
 }
-
 
 TEST_CASE("failed test: simple arithmetic")
 {
