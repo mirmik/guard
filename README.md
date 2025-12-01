@@ -27,6 +27,8 @@ GUARD_TEST_MAIN();
 - `TEST_CASE("name")` — объявляет и регистрирует тест с указанным именем.
 - `GUARD_TEST_MAIN()` — генерирует `main` и запускает все зарегистрированные тесты. Поддерживает фильтр по подстроке имени теста: `--test-case=Substring` или `--test-case Substring`.
 - `guard::test::run_all(const char *test_filter = nullptr, std::ostream &os = std::cout)` — низкоуровневый запускатель тестов (альтернатива `GUARD_TEST_MAIN`).
+- `guard::test::set_verbose(bool value)` — включает или отключает подробный режим вывода.
+- Флаг командной строки `--verbose` (при использовании `GUARD_TEST_MAIN()`) включает подробный режим, в котором перед запуском каждого теста печатается строка `Running test: <имя>`.
 
 ### Макросы проверок (алиасы, включены по умолчанию)
 
