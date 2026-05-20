@@ -1,11 +1,14 @@
 # guard
 
-Однопоточный header-only кроссплатформенный тестовый фреймворк, по синтаксису близок к облегчённому doctest. Требуется C++11+.
+Однопоточный header-only кроссплатформенный тестовый фреймворк.
+
+- C++ API по синтаксису близок к облегчённому doctest. Требуется C++11+.
+- C API сделан отдельно в `guard_c.h`. Требуется C99+.
 
 ## Минимальный пример
 
 ```cpp
-#include "guard.h"
+#include "guard_main.h"
 #include <stdexcept>
 
 TEST_CASE("simple arithmetic") {
@@ -91,7 +94,7 @@ GUARD_TEST_MAIN();
 
 ```cpp
 #define GUARD_TEST_NO_CHECK_ALIASES
-#include "guard.h"
+#include "guard_main.h"
 ```
 
 Тогда используются только `GUARD_CHECK`, `GUARD_REQUIRE` и т.п.
@@ -102,7 +105,7 @@ GUARD_TEST_MAIN();
 
 ```cpp
 #define GUARD_TEST_ENABLE_COLORS
-#include "guard.h"
+#include "guard_main.h"
 ```
 
 ### Низкоуровневый API
@@ -127,3 +130,62 @@ GUARD_TEST_MAIN();
 3. **Контроль выполнения**: каждый `TEST_CASE` выполняется внутри защищённого блока на внутренних исключениях — мягкие проверки копят сообщения, жёсткие бросают специальное исключение и прерывают тест, а раннер ловит его и печатает накопленные ошибки.
 4. **Ошибки и сообщения**: все сообщения по тесту собираются в одну строку; по окончании она либо пуста (успех), либо печатается целиком (провал). Неожиданные исключения также переводятся в понятные текстовые ошибки.
 5. **Портируемость**: используется только стандартный C/C++ (без потоков и платформенных API), поэтому код собирается везде, где есть нормальный компилятор C++11.
+
+---
+
+## C API
+
+`guard_c.h` предназначен для тестов, которые должны компилироваться именно C-компилятором. Он не использует C++ exceptions, namespaces, templates или автоматическую регистрацию тестов.
+
+Минимальный пример:
+
+```c
+#include "guard_c.h"
+
+GUARD_C_TEST(simple_arithmetic)
+{
+    GUARD_C_CHECK_EQ_INT(4, 2 + 2);
+    GUARD_C_CHECK(10 > 1);
+    return 0;
+}
+
+int main(int argc, char** argv)
+{
+    GUARD_C_BEGIN_ARGS(argc, argv);
+    GUARD_C_RUN(simple_arithmetic);
+    return GUARD_C_END();
+}
+```
+
+### Запуск тестов
+
+- `GUARD_C_BEGIN()` — начать прогон без фильтра.
+- `GUARD_C_BEGIN_ARGS(argc, argv)` — начать прогон с поддержкой `--test-case` и `--verbose`.
+- `GUARD_C_RUN(test_name)` — явно запустить тест.
+- `GUARD_C_END()` — напечатать сводку и вернуть process exit code.
+- `GUARD_C_TEST(name)` — объявить тестовую функцию `static int name(void)`.
+
+C API использует явный список тестов. Это менее магично, чем C++ auto-registration, зато переносимо и не требует compiler-specific sections/constructors.
+
+### Проверки
+
+Мягкие проверки продолжают текущий тест:
+
+- `GUARD_C_CHECK(expr)`
+- `GUARD_C_CHECK_FALSE(expr)`
+- `GUARD_C_CHECK_EQ_INT(expected, actual)`
+- `GUARD_C_CHECK_EQ_UINT(expected, actual)`
+- `GUARD_C_CHECK_EQ_LONG(expected, actual)`
+- `GUARD_C_CHECK_EQ_SIZE(expected, actual)`
+- `GUARD_C_CHECK_NEAR_DOUBLE(expected, actual, epsilon)`
+- `GUARD_C_CHECK_STREQ(expected, actual)`
+- `GUARD_C_CHECK_PTR_EQ(expected, actual)`
+
+Жёсткие проверки печатают ошибку и делают `return 1`, поэтому тесты должны быть объявлены через `GUARD_C_TEST` или вручную как `static int test(void)`:
+
+- `GUARD_C_REQUIRE(expr)`
+- `GUARD_C_REQUIRE_FALSE(expr)`
+- `GUARD_C_REQUIRE_EQ_INT(expected, actual)`
+- `GUARD_C_REQUIRE_NEAR_DOUBLE(expected, actual, epsilon)`
+- `GUARD_C_REQUIRE_STREQ(expected, actual)`
+- `GUARD_C_FAIL(message)`

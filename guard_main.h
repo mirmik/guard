@@ -14,7 +14,9 @@
 #include <string>
 #include <vector>
 
-namespace guard::detail
+namespace guard
+{
+namespace detail
 {
     enum class Color
     {
@@ -59,8 +61,17 @@ namespace guard::detail
             os << color_code(Color::Default);
         }
     };
-} // namespace guard::detail
-namespace guard::test
+
+    template <typename T>
+    inline std::string to_string(T value)
+    {
+        std::ostringstream os;
+        os << value;
+        return os.str();
+    }
+} // namespace detail
+
+namespace test
 {
     using TestFunc = void (*)();
 
@@ -348,7 +359,8 @@ namespace guard::test
     {
         return run_all(nullptr, os);
     }
-} // namespace guard::test
+} // namespace test
+} // namespace guard
 
 // ---------- внутренняя склейка имён ----------
 #define GUARD_TEST_CONCAT_IMPL(a, b) a##b
@@ -401,7 +413,7 @@ namespace guard::test
     {                                                                          \
         GUARD_CHECK_ENV_COUNT_ASSERT(false);                                   \
         std::string _guard_msg = std::string("Test assertion failed at ") +    \
-                                 __FILE__ + ":" + std::to_string(__LINE__) +   \
+                                 __FILE__ + ":" + ::guard::detail::to_string(__LINE__) + \
                                  ": " + (msg_);                                \
         GUARD_CHECK_ENV_APPEND(_guard_msg);                                    \
         GUARD_CHECK_ENV_RAISE_IMPL();                                          \
@@ -497,8 +509,8 @@ namespace guard::test
         {                                                                      \
             GUARD_TEST_FAIL_MSG(                                               \
                 std::string("Timeout: expression ") + #code + " took " +       \
-                std::to_string(_guard_ms) + " ms, limit is " +                 \
-                std::to_string(static_cast<long long>(ms)) + " ms");           \
+                ::guard::detail::to_string(_guard_ms) + " ms, limit is " +     \
+                ::guard::detail::to_string(ms) + " ms");                      \
         }                                                                      \
         else                                                                   \
         {                                                                      \
