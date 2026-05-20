@@ -359,15 +359,22 @@ namespace guard::test
 // TEST_CASE("name") {
 //     CHECK(...);
 // }
-#define TEST_CASE(name)                                                        \
-    static void GUARD_TEST_CONCAT(guard_test_func_, __LINE__)();               \
-    static ::guard::test::Registrar GUARD_TEST_CONCAT(guard_test_reg_,         \
-                                                      __LINE__)(               \
+#ifdef __COUNTER__
+#define GUARD_TEST_UNIQUE_ID __COUNTER__
+#else
+#define GUARD_TEST_UNIQUE_ID __LINE__
+#endif
+
+#define GUARD_TEST_CASE_IMPL(name, id)                                         \
+    static void GUARD_TEST_CONCAT(guard_test_func_, id)();                     \
+    static ::guard::test::Registrar GUARD_TEST_CONCAT(guard_test_reg_, id)(    \
         name,                                                                  \
         __FILE__,                                                              \
         __LINE__,                                                              \
-        &GUARD_TEST_CONCAT(guard_test_func_, __LINE__));                       \
-    static void GUARD_TEST_CONCAT(guard_test_func_, __LINE__)()
+        &GUARD_TEST_CONCAT(guard_test_func_, id));                             \
+    static void GUARD_TEST_CONCAT(guard_test_func_, id)()
+
+#define TEST_CASE(name) GUARD_TEST_CASE_IMPL(name, GUARD_TEST_UNIQUE_ID)
 
 // ---------- Алисы CHECK* / REQUIRE* на GUARD_* ----------
 

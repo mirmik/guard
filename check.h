@@ -89,8 +89,8 @@ static inline std::string guard_location_part(struct guard_location loc)
 #define GUARD_CHECK_EQ(a, b)                                                   \
     do                                                                         \
     {                                                                          \
-        const auto &_guard_a = (a);                                            \
-        const auto &_guard_b = (b);                                            \
+        const auto _guard_a = (a);                                            \
+        const auto _guard_b = (b);                                            \
         const bool _guard_ok = (_guard_a == _guard_b);                         \
         GUARD_CHECK_ENV_COUNT_ASSERT(_guard_ok);                               \
         if (!_guard_ok)                                                        \
@@ -109,8 +109,8 @@ static inline std::string guard_location_part(struct guard_location loc)
 #define GUARD_REQUIRE_EQ(a, b)                                                 \
     do                                                                         \
     {                                                                          \
-        const auto &_guard_a = (a);                                            \
-        const auto &_guard_b = (b);                                            \
+        const auto _guard_a = (a);                                            \
+        const auto _guard_b = (b);                                            \
         const bool _guard_ok = (_guard_a == _guard_b);                         \
         GUARD_CHECK_ENV_COUNT_ASSERT(_guard_ok);                               \
         if (!_guard_ok)                                                        \
@@ -130,8 +130,8 @@ static inline std::string guard_location_part(struct guard_location loc)
 #define GUARD_CHECK_NEQ(a, b)                                                  \
     do                                                                         \
     {                                                                          \
-        const auto &_guard_a = (a);                                            \
-        const auto &_guard_b = (b);                                            \
+        const auto _guard_a = (a);                                            \
+        const auto _guard_b = (b);                                            \
         const bool _guard_ok = (_guard_a != _guard_b);                         \
         GUARD_CHECK_ENV_COUNT_ASSERT(_guard_ok);                               \
         if (!_guard_ok)                                                        \
@@ -150,8 +150,8 @@ static inline std::string guard_location_part(struct guard_location loc)
 #define GUARD_REQUIRE_NEQ(a, b)                                                \
     do                                                                         \
     {                                                                          \
-        const auto &_guard_a = (a);                                            \
-        const auto &_guard_b = (b);                                            \
+        const auto _guard_a = (a);                                            \
+        const auto _guard_b = (b);                                            \
         const bool _guard_ok = (_guard_a != _guard_b);                         \
         GUARD_CHECK_ENV_COUNT_ASSERT(_guard_ok);                               \
         if (!_guard_ok)                                                        \
@@ -171,8 +171,8 @@ static inline std::string guard_location_part(struct guard_location loc)
 #define GUARD_CHECK_LT(a, b)                                                   \
     do                                                                         \
     {                                                                          \
-        const auto &_guard_a = (a);                                            \
-        const auto &_guard_b = (b);                                            \
+        const auto _guard_a = (a);                                            \
+        const auto _guard_b = (b);                                            \
         const bool _guard_ok = (_guard_a < _guard_b);                          \
         GUARD_CHECK_ENV_COUNT_ASSERT(_guard_ok);                               \
         if (!_guard_ok)                                                        \
@@ -191,8 +191,8 @@ static inline std::string guard_location_part(struct guard_location loc)
 #define GUARD_REQUIRE_LT(a, b)                                                 \
     do                                                                         \
     {                                                                          \
-        const auto &_guard_a = (a);                                            \
-        const auto &_guard_b = (b);                                            \
+        const auto _guard_a = (a);                                            \
+        const auto _guard_b = (b);                                            \
         const bool _guard_ok = (_guard_a < _guard_b);                          \
         GUARD_CHECK_ENV_COUNT_ASSERT(_guard_ok);                               \
         if (!_guard_ok)                                                        \
@@ -212,8 +212,8 @@ static inline std::string guard_location_part(struct guard_location loc)
 #define GUARD_CHECK_GT(a, b)                                                   \
     do                                                                         \
     {                                                                          \
-        const auto &_guard_a = (a);                                            \
-        const auto &_guard_b = (b);                                            \
+        const auto _guard_a = (a);                                            \
+        const auto _guard_b = (b);                                            \
         const bool _guard_ok = (_guard_a > _guard_b);                          \
         GUARD_CHECK_ENV_COUNT_ASSERT(_guard_ok);                               \
         if (!_guard_ok)                                                        \
@@ -232,8 +232,8 @@ static inline std::string guard_location_part(struct guard_location loc)
 #define GUARD_REQUIRE_GT(a, b)                                                 \
     do                                                                         \
     {                                                                          \
-        const auto &_guard_a = (a);                                            \
-        const auto &_guard_b = (b);                                            \
+        const auto _guard_a = (a);                                            \
+        const auto _guard_b = (b);                                            \
         const bool _guard_ok = (_guard_a > _guard_b);                          \
         GUARD_CHECK_ENV_COUNT_ASSERT(_guard_ok);                               \
         if (!_guard_ok)                                                        \
